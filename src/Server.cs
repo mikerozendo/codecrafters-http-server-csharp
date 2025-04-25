@@ -14,7 +14,7 @@ while (true)
 
     try
     {
-        var response = @"HTTP/1.1 200 OK\r\n\r\n";
+        var response = "HTTP/1.1 200 OK\r\n\r\n";
         var responseBytes = System.Text.Encoding.UTF8.GetBytes(response);
         await connectedSocked.SendAsync(responseBytes);
     }
