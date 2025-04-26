@@ -1,6 +1,6 @@
 using codecrafters_http_server.src.Exceptions;
 
-namespace codecrafters_http_server.src;
+namespace codecrafters_http_server.src.Models;
 
 public sealed class RequestLine
 {

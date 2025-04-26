@@ -1,48 +1,102 @@
 using System.Net;
 using System.Net.Sockets;
-using codecrafters_http_server.src;
 using codecrafters_http_server.src.Models;
 using System.Text;
-// You can use print statements as follows for debugging, they'll be visible when running tests.
 
-string[] availableResources = ["/"];
-
-Console.WriteLine("Logs from your program will appear here!");
-
-TcpListener server = new TcpListener(IPAddress.Any, 4221);
+TcpListener server = new(IPAddress.Any, 4221);
 server.Start();
+server.BeginAcceptSocket(AcceptCallback, server);
+await Task.Delay(Timeout.Infinite);
 
-while (true)
+void AcceptCallback(IAsyncResult asyncResult)
 {
-    var cancellationTokenTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(30)).Token;
-    var connectedSocket = await server.AcceptSocketAsync(cancellationTokenTimeout);
-
     try
     {
-        var buffer = new byte[1024];
-        var receivedBytes = await connectedSocket.ReceiveAsync(buffer, SocketFlags.None, cancellationTokenTimeout);
-        var incommingRequestString = Encoding.UTF8.GetString(buffer, 0, receivedBytes);
+        var server = (TcpListener)asyncResult.AsyncState!;
+        var socket = server.EndAcceptSocket(asyncResult);
 
-        Console.WriteLine($"Received request: {incommingRequestString}");
-        ArgumentNullException.ThrowIfNullOrEmpty(incommingRequestString);
-
-        var requestLine = new RequestLine(incommingRequestString);
-        var doesResourceExists = availableResources.Any(x => x.Equals(requestLine.Resource, StringComparison.OrdinalIgnoreCase));
-        if (!doesResourceExists)
+        Task.Run(async () =>
         {
-            Console.WriteLine($"Resource not found: {requestLine.Resource}");
-            await connectedSocket.SendAsync(Encoding.UTF8.GetBytes(HttpResponse.Http404NotFoudResponse));
-        }
+            try
+            {
+                var bufferToReceive = new byte[1024];
 
-        var responseBytes = Encoding.UTF8.GetBytes(HttpResponse.Http200OkResponse);
-        await connectedSocket.SendAsync(responseBytes);
+                var cancellationTokenTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(30)).Token;
+                var receivedBytes = await socket.ReceiveAsync(bufferToReceive, SocketFlags.None, cancellationTokenTimeout);
+
+                var incommingRequestString = Encoding.UTF8.GetString(bufferToReceive, 0, receivedBytes);
+
+                Console.WriteLine($"Received request: {incommingRequestString}");
+                ArgumentNullException.ThrowIfNullOrEmpty(incommingRequestString);
+
+                var requestLine = new RequestLine(incommingRequestString);
+                var existingResource = ResourceResolver.ResolveResource(requestLine.Resource, requestLine.HttpMethod);
+
+                if (existingResource is null)
+                {
+                    Console.WriteLine("Resource not found");
+                    await socket.SendAsync(Encoding.UTF8.GetBytes(HttpResponseWithoutBody.Http404NotFoudResponse));
+                }
+
+                Console.WriteLine($"Resource: {existingResource!.Path}");
+                var responseBuffer = Encoding.UTF8.GetBytes(existingResource.Response.ToString());
+                await socket.SendAsync(responseBuffer);
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine("Timeout");
+            }
+            finally
+            {
+                socket?.Dispose();
+                server.BeginAcceptSocket(new AsyncCallback(AcceptCallback), server);
+            }
+        });
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Exception: {ex.Message}");
-    }
-    finally
-    {
-        await connectedSocket.DisconnectAsync(false);
+        Console.WriteLine($"Error in AcceptCallback: {ex.Message}");
     }
 }
+
+// while (true)
+// {
+// Socket? connectedSocket = null;
+// var connectedSocket = await server.AcceptSocketAsync();
+// Prevent tight loop, adjust as necessary
+// try
+// {
+//     var bufferToReceive = new byte[1024];
+
+//     var cancellationTokenTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(30)).Token;
+//     var receivedBytes = await connectedSocket.ReceiveAsync(bufferToReceive, SocketFlags.None, cancellationTokenTimeout);
+
+//     var incommingRequestString = Encoding.UTF8.GetString(bufferToReceive, 0, receivedBytes);
+
+//     Console.WriteLine($"Received request: {incommingRequestString}");
+//     ArgumentNullException.ThrowIfNullOrEmpty(incommingRequestString);
+
+//     var requestLine = new RequestLine(incommingRequestString);
+//     var existingResource = ResourceResolver.ResolveResource(requestLine.Resource, requestLine.HttpMethod);
+
+//     if (existingResource is null)
+//     {
+//         Console.WriteLine("Resource not found");
+//         await connectedSocket.SendAsync(Encoding.UTF8.GetBytes(HttpResponseWithoutBody.Http404NotFoudResponse));
+//     }
+
+//     Console.WriteLine($"Resource: {existingResource!.Path}");
+//     var responseBuffer = Encoding.UTF8.GetBytes(existingResource.Response.ToString());
+//     await connectedSocket.SendAsync(responseBuffer);
+// }
+// catch (OperationCanceledException)
+// {
+//     Console.WriteLine("Timeout");
+// }
+// finally
+// {
+//     connectedSocket?.Dispose();
+//     await Task.Delay(TimeSpan.FromSeconds(1));
+// }
+// }
+

@@ -1,6 +1,4 @@
-using System;
-
-namespace codecrafters_http_server.src;
+namespace codecrafters_http_server.src.Models;
 
 public sealed class RequestHeaders
 {
