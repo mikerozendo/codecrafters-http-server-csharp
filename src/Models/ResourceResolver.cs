@@ -1,10 +1,12 @@
+using System.Runtime.Versioning;
+
 namespace codecrafters_http_server.src.Models;
 
 public static class ResourceResolver
 {
     public static IReadOnlyCollection<Resource> AvailableResources { get; } = [
         new Resource(ResourcePath.Root, HttpMethod.GET, HttpResponseWithoutBody.Http200OkResponse),
-        new Resource(ResourcePath.EchoWithParam, HttpMethod.GET, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 3\r\n\r\nabc"),
+        new Resource(ResourcePath.EchoWithParam, HttpMethod.GET, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:{RESPONSE_LENGHT}\r\n\r\n{RESPONSE}"),
     ];
 
     public static Resource? ResolveResource(string requestedResource, HttpMethod httpMethod)
@@ -21,32 +23,46 @@ public static class ResourceResolver
             );
         }
 
-        return AvailableResources.SingleOrDefault(internalResource =>
-        {
-            if (internalResource.HttpMethod != httpMethod)
-                return false;
-
-            var internalResourceArgs = internalResource.Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
-
-            if (internalResourceArgs.Length != requestedResourceArgs.Length ||
-                !internalResourceArgs.Any(x => x.Contains('{')))
-                return false;
-
-            bool isValid = true;
-
-            for (int i = 0; i < internalResourceArgs.Length; i++)
-            {
-                if (internalResourceArgs[i].Equals("{param}"))
-                    internalResourceArgs[i] = $"param-{requestedResourceArgs[i]}";
-
-                else if (!internalResourceArgs[i].Equals(requestedResourceArgs[i]))
+        var resource = AvailableResources.SingleOrDefault(internalResource =>
                 {
-                    isValid = false;
-                    break;
-                }
-            }
+                    if (internalResource.HttpMethod != httpMethod)
+                        return false;
 
-            return isValid;
-        });
+                    var internalResourceArgs = internalResource.Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+                    if (internalResourceArgs.Length != requestedResourceArgs.Length ||
+                        !internalResourceArgs.Any(x => x.Contains('{')))
+                        return false;
+
+                    bool isValid = true;
+
+                    for (int i = 0; i < internalResourceArgs.Length; i++)
+                    {
+                        if (internalResourceArgs[i].Equals("{param}"))
+                            internalResourceArgs[i] = $"param-{requestedResourceArgs[i]}/";
+
+                        else if (!internalResourceArgs[i].Equals(requestedResourceArgs[i]))
+                        {
+                            isValid = false;
+                            break;
+                        }
+                    }
+
+                    var convertedResource = string.Join(string.Empty, internalResourceArgs);
+
+                    if (isValid)
+                    {
+                        var responsebody = string.Join(string.Empty, convertedResource.Split("param-")[1].TakeWhile(c => c != '/'));
+                        internalResource.Response = internalResource.Response.ToString().Replace("{RESPONSE}", responsebody).Replace("{RESPONSE_LENGHT}", responsebody.Length.ToString());
+                    }
+
+                    return isValid;
+                });
+
+        if (resource is null)
+            return null;
+
+
+        return resource;
     }
 }

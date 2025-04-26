@@ -39,6 +39,7 @@ void AcceptCallback(IAsyncResult asyncResult)
                 }
 
                 Console.WriteLine($"Resource: {existingResource!.Path}");
+                Console.WriteLine($"Response: {existingResource.Response.ToString()}");
                 var responseBuffer = Encoding.UTF8.GetBytes(existingResource.Response.ToString());
                 await socket.SendAsync(responseBuffer);
             }
