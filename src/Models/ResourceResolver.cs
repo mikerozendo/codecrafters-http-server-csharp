@@ -1,15 +1,13 @@
-using System.Runtime.Versioning;
-
 namespace codecrafters_http_server.src.Models;
 
-public static class ResourceResolver
+public class ResourceResolver : IResourceResolver
 {
-    public static IReadOnlyCollection<Resource> AvailableResources { get; } = [
+    private ICollection<Resource> AvailableResources { get; set; } = [
         new Resource(ResourcePath.Root, HttpMethod.GET, HttpResponseWithoutBody.Http200OkResponse),
         new Resource(ResourcePath.EchoWithParam, HttpMethod.GET, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:{RESPONSE_LENGHT}\r\n\r\n{RESPONSE}"),
     ];
 
-    public static Resource? ResolveResource(string requestedResource, HttpMethod httpMethod)
+    public Resource? ResolveResource(string requestedResource, HttpMethod httpMethod)
     {
         if (string.IsNullOrWhiteSpace(requestedResource))
             return null;
@@ -36,6 +34,7 @@ public static class ResourceResolver
 
                     bool isValid = true;
 
+                    //trash solution, its working until now, but I dont figure it out about how to fix yet :(
                     for (int i = 0; i < internalResourceArgs.Length; i++)
                     {
                         if (internalResourceArgs[i].Equals("{param}"))

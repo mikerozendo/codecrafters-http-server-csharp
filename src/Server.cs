@@ -2,10 +2,15 @@ using System.Net;
 using System.Net.Sockets;
 using codecrafters_http_server.src.Models;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
+
+var serviceProvider = BuildServiceProvider();
 
 TcpListener server = new(IPAddress.Any, 4221);
+
 server.Start();
 server.BeginAcceptSocket(AcceptCallback, server);
+
 await Task.Delay(Timeout.Infinite);
 
 void AcceptCallback(IAsyncResult asyncResult)
@@ -17,8 +22,11 @@ void AcceptCallback(IAsyncResult asyncResult)
 
         Task.Run(async () =>
         {
+            var serviceScope = serviceProvider.CreateAsyncScope(); // Each task is going to have its own scope, necessary once requests are going to be handled in parallel
+
             try
             {
+                var scopedServiceProvider = serviceScope.ServiceProvider;
                 var bufferToReceive = new byte[1024];
 
                 var cancellationTokenTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(30)).Token;
@@ -29,9 +37,19 @@ void AcceptCallback(IAsyncResult asyncResult)
                 Console.WriteLine($"Received request: {incommingRequestString}");
                 ArgumentNullException.ThrowIfNullOrEmpty(incommingRequestString);
 
-                var requestLine = new RequestLine(incommingRequestString);
-                var existingResource = ResourceResolver.ResolveResource(requestLine.Resource, requestLine.HttpMethod);
+                var requestComponentsBuilder = scopedServiceProvider.GetRequiredService<IRequestComponentsBuilder>();
+                ArgumentNullException.ThrowIfNull(requestComponentsBuilder, "Request components builder is not registered in the service provider.");
 
+                var requestComponents = requestComponentsBuilder.BuildRequestComponents(incommingRequestString);
+                if (requestComponents == Enumerable.Empty<IRequestComponent>())
+                    throw new ArgumentNullException(nameof(requestComponents), "Request components are not registered in the service provider.");
+
+                var requestLine = requestComponents.OfType<RequestLine>().Single();
+
+                var resourceResolver = scopedServiceProvider.GetRequiredService<IResourceResolver>();
+                ArgumentNullException.ThrowIfNull(resourceResolver, "Resource resolver is not registered in the service provider.");
+
+                var existingResource = resourceResolver.ResolveResource(requestLine.Resource, requestLine.HttpMethod);
                 if (existingResource is null)
                 {
                     Console.WriteLine("Resource not found");
@@ -52,10 +70,16 @@ void AcceptCallback(IAsyncResult asyncResult)
             {
                 Console.WriteLine("Timeout");
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"General error: {ex.Message}");
+            }
             finally
             {
                 Console.WriteLine("Freeing socket resources");
+
                 socket.Dispose();
+                await serviceScope.DisposeAsync();
 
                 server.BeginAcceptSocket(new AsyncCallback(AcceptCallback), server);
                 Console.WriteLine("Server is now listening for new connections");
@@ -66,4 +90,17 @@ void AcceptCallback(IAsyncResult asyncResult)
     {
         Console.WriteLine($"Error in AcceptCallback: {ex.Message}");
     }
+}
+
+
+ServiceProvider BuildServiceProvider()
+{
+    var services = new ServiceCollection();
+    services.AddScoped<IRequestComponent, RequestLine>();
+    services.AddScoped<IRequestComponent, RequestHeader>();
+    services.AddScoped<IRequest, Request>();
+    services.AddScoped<IRequestComponentsBuilder, RequestComponentsBuilder>();
+    services.AddScoped<IResourceResolver, ResourceResolver>();
+    var provider = services.BuildServiceProvider();
+    return provider;
 }
