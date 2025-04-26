@@ -35,13 +35,18 @@ void AcceptCallback(IAsyncResult asyncResult)
                 if (existingResource is null)
                 {
                     Console.WriteLine("Resource not found");
+
                     await socket.SendAsync(Encoding.UTF8.GetBytes(HttpResponseWithoutBody.Http404NotFoudResponse));
+
+                    Console.WriteLine("Response has been sent"); return;
                 }
 
-                Console.WriteLine($"Resource: {existingResource!.Path}");
-                Console.WriteLine($"Response: {existingResource.Response.ToString()}");
-                var responseBuffer = Encoding.UTF8.GetBytes(existingResource.Response.ToString());
-                await socket.SendAsync(responseBuffer);
+                Console.WriteLine($"Resource: {existingResource.Path}");
+                Console.WriteLine($"Sending response: {existingResource.Response}");
+
+                var responseBuffer = Encoding.UTF8.GetBytes(existingResource.Response.ToString()!);
+
+                await socket.SendAsync(responseBuffer); return;
             }
             catch (OperationCanceledException)
             {
@@ -49,8 +54,11 @@ void AcceptCallback(IAsyncResult asyncResult)
             }
             finally
             {
-                socket?.Dispose();
+                Console.WriteLine("Freeing socket resources");
+                socket.Dispose();
+
                 server.BeginAcceptSocket(new AsyncCallback(AcceptCallback), server);
+                Console.WriteLine("Server is now listening for new connections");
             }
         });
     }
