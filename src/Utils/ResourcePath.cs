@@ -1,4 +1,4 @@
-namespace codecrafters_http_server.src.Models;
+namespace codecrafters_http_server.src.Utils;
 
 public static class ResourcePath
 {

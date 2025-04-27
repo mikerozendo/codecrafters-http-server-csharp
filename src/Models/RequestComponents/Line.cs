@@ -19,19 +19,9 @@ public sealed class Line : IRequestComponent
         if (requestLineArgs.Length != 3)
             throw new HttpRequestParsingException();
 
-        return new Line(
-            new HttpMethod(requestLineArgs[0]),
-            requestLineArgs[1],
-            requestLineArgs[2]
-        );
+        HttpMethod = new HttpMethod(requestLineArgs[0]);
+        Resource = requestLineArgs[1];
+        HttpVersion = requestLineArgs[2];
+        return this;
     }
-
-    internal Line(HttpMethod httpMethod, string resource, string httpVersion)
-    {
-        HttpMethod = httpMethod;
-        Resource = resource;
-        HttpVersion = httpVersion;
-    }
-
-    public Line() { }
 }
