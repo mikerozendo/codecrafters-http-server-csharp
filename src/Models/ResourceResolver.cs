@@ -1,13 +1,17 @@
+using codecrafters_http_server.src.Interfaces;
+using codecrafters_http_server.src.Utils;
+
 namespace codecrafters_http_server.src.Models;
 
 public class ResourceResolver : IResourceResolver
 {
-    private ICollection<Resource> AvailableResources { get; set; } = [
-        new Resource(ResourcePath.Root, HttpMethod.GET, HttpResponseWithoutBody.Http200OkResponse),
-        new Resource(ResourcePath.EchoWithParam, HttpMethod.GET, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:{RESPONSE_LENGHT}\r\n\r\n{RESPONSE}"),
+    public ICollection<RequestedResource> AvailableResources { get; set; } = [
+        new RequestedResource(ResourcePath.Root, new HttpMethod("GET"), HttpResponseWithoutBody.Http200OkResponse),
+        new RequestedResource(ResourcePath.EchoWithParam, new HttpMethod("GET"), "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:{RESPONSE_LENGHT}\r\n\r\n{RESPONSE}"),
+        new RequestedResource(ResourcePath.UserAgent, new HttpMethod("GET"), "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:{RESPONSE_LENGHT}\r\n\r\n{RESPONSE}"),
     ];
 
-    public Resource? ResolveResource(string requestedResource, HttpMethod httpMethod)
+    public RequestedResource? ResolveResource(string requestedResource, HttpMethod httpMethod)
     {
         if (string.IsNullOrWhiteSpace(requestedResource))
             return null;

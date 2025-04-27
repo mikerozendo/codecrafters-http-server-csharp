@@ -1,4 +1,4 @@
-namespace codecrafters_http_server.src.Models;
+namespace codecrafters_http_server.src.Interfaces;
 
 public interface IRequestParser<TComponent> where TComponent : IRequestComponent
 {

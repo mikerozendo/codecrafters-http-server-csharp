@@ -3,6 +3,9 @@ using System.Net.Sockets;
 using codecrafters_http_server.src.Models;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
+using codecrafters_http_server.src.Interfaces;
+using codecrafters_http_server.src.Utils;
+using codecrafters_http_server.src.Models.RequestComponents;
 
 var serviceProvider = BuildServiceProvider();
 
@@ -44,7 +47,7 @@ void AcceptCallback(IAsyncResult asyncResult)
                 if (requestComponents == Enumerable.Empty<IRequestComponent>())
                     throw new ArgumentNullException(nameof(requestComponents), "Request components are not registered in the service provider.");
 
-                var requestLine = requestComponents.OfType<RequestLine>().Single();
+                var requestLine = requestComponents.OfType<Line>().Single();
 
                 var resourceResolver = scopedServiceProvider.GetRequiredService<IResourceResolver>();
                 ArgumentNullException.ThrowIfNull(resourceResolver, "Resource resolver is not registered in the service provider.");
@@ -96,11 +99,11 @@ void AcceptCallback(IAsyncResult asyncResult)
 ServiceProvider BuildServiceProvider()
 {
     var services = new ServiceCollection();
-    services.AddScoped<IRequestComponent, RequestLine>();
-    services.AddScoped<IRequestComponent, RequestHeader>();
-    services.AddScoped<IRequest, Request>();
-    services.AddScoped<IRequestComponentsBuilder, RequestComponentsBuilder>();
-    services.AddScoped<IResourceResolver, ResourceResolver>();
+    // services.AddScoped<IRequestComponent, RequestLine>();
+    // services.AddScoped<IRequestComponent, RequestHeader>();
+    // services.AddScoped<IRequest, Request>();
+    // services.AddScoped<IRequestComponentsBuilder, RequestComponentsBuilder>();
+    // services.AddScoped<IResourceResolver, ResourceResolver>();
     var provider = services.BuildServiceProvider();
     return provider;
 }

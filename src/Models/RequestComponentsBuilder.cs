@@ -1,3 +1,5 @@
+using codecrafters_http_server.src.Interfaces;
+
 namespace codecrafters_http_server.src.Models;
 
 public sealed class RequestComponentsBuilder(IEnumerable<IRequestComponent> requestComponents)

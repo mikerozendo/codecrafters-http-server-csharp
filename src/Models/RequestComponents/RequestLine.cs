@@ -1,8 +1,9 @@
 using codecrafters_http_server.src.Exceptions;
+using codecrafters_http_server.src.Interfaces;
 
-namespace codecrafters_http_server.src.Models;
+namespace codecrafters_http_server.src.Models.RequestComponents;
 
-public sealed class RequestLine : IRequestComponent
+public sealed class Line : IRequestComponent
 {
     public HttpMethod HttpMethod { get; private set; }
     public string Resource { get; private set; }
@@ -18,18 +19,19 @@ public sealed class RequestLine : IRequestComponent
         if (requestLineArgs.Length != 3)
             throw new HttpRequestParsingException();
 
-        if (!Enum.TryParse<HttpMethod>(requestLineArgs[0], true, out var httpMethod))
-            throw new HttpRequestParsingException();
-
-        return new RequestLine(httpMethod, requestLineArgs[1], requestLineArgs[2]);
+        return new Line(
+            new HttpMethod(requestLineArgs[0]),
+            requestLineArgs[1],
+            requestLineArgs[2]
+        );
     }
 
-    internal RequestLine(HttpMethod httpMethod, string resource, string httpVersion)
+    internal Line(HttpMethod httpMethod, string resource, string httpVersion)
     {
         HttpMethod = httpMethod;
         Resource = resource;
         HttpVersion = httpVersion;
     }
 
-    public RequestLine() { }
+    public Line() { }
 }
