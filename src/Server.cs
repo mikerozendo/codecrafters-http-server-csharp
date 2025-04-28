@@ -80,7 +80,7 @@ void AcceptCallback(IAsyncResult asyncResult)
                 socket.Dispose();
                 await serviceScope.DisposeAsync();
 
-                server.EndAcceptSocket(asyncResult);
+                // server.EndAcceptSocket(asyncResult);
                 Console.WriteLine("Server is now listening for new connections");
             }
         });
