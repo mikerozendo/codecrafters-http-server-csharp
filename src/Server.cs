@@ -12,7 +12,7 @@ var serviceProvider = BuildServiceProvider();
 TcpListener server = new(IPAddress.Any, 4221);
 
 server.Start();
-server.BeginAcceptSocket(AcceptCallback, server);
+server.BeginAcceptTcpClient(AcceptCallback, server);
 
 await Task.Delay(Timeout.Infinite);
 
@@ -21,7 +21,7 @@ void AcceptCallback(IAsyncResult asyncResult)
     try
     {
         var server = (TcpListener)asyncResult.AsyncState!;
-        var socket = server.EndAcceptSocket(asyncResult);
+        var socket = server.AcceptSocket();
 
         Task.Run(async () =>
         {
@@ -80,7 +80,7 @@ void AcceptCallback(IAsyncResult asyncResult)
                 socket.Dispose();
                 await serviceScope.DisposeAsync();
 
-                server.BeginAcceptSocket(new AsyncCallback(AcceptCallback), server);
+                server.EndAcceptSocket(asyncResult);
                 Console.WriteLine("Server is now listening for new connections");
             }
         });
