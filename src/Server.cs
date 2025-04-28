@@ -102,6 +102,8 @@ ServiceProvider BuildServiceProvider()
 
     services.AddScoped<IResponseProducer, Echo>();
     services.AddScoped<IResponseProducer, Root>();
+    services.AddScoped<IResponseProducer, UserAgent>();
+
     var provider = services.BuildServiceProvider();
     return provider;
 }

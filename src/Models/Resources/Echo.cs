@@ -28,9 +28,9 @@ public class Echo(IRequest request) : ResourceBase(request,
 
     public override bool HasMatchingRoute()
     {
-        var requestLine = Request.GetRequestLine();
+        if (!HasMatchingHttpMethod()) return false;
 
-        var requestedPath = requestLine.Resource;
+        var requestedPath = Line.Resource;
         var requestedPathWithoutArgs = requestedPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
         var requestedPathWithoutParam = requestedPathWithoutArgs[0];
 

@@ -9,5 +9,10 @@ public sealed class Root(IRequest request) : ResourceBase(request,
     ), IResponseProducer
 {
     public string ProduceResponse() => HttpResponseWithoutBody.Http200OkResponse;
-    public override bool HasMatchingRoute() => Request.GetRequestLine().Resource.Equals(ResourcePath.Root);
+    public override bool HasMatchingRoute()
+    {
+        if (!HasMatchingHttpMethod()) return false;
+
+        return Request.GetRequestLine().Resource.Equals(ResourcePath.Root);
+    }
 }
