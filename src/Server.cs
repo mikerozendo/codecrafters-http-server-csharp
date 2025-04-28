@@ -12,9 +12,13 @@ var serviceProvider = BuildServiceProvider();
 TcpListener server = new(IPAddress.Any, 4221);
 
 server.Start();
-server.BeginAcceptTcpClient(OnConnectedClientCallBack, server);
+while (true)
+{
+    server.BeginAcceptTcpClient(OnConnectedClientCallBack, server);
 
-await Task.Delay(Timeout.Infinite);
+}
+
+// await Task.Delay(Timeout.Infinite);
 
 void OnConnectedClientCallBack(IAsyncResult asyncResult)
 {
