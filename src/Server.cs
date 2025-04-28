@@ -36,27 +36,15 @@ void AcceptCallback(IAsyncResult asyncResult)
                 var receivedBytes = await socket.ReceiveAsync(bufferToReceive, SocketFlags.None, cancellationTokenTimeout);
 
                 var incommingRequestString = Encoding.UTF8.GetString(bufferToReceive, 0, receivedBytes);
-
                 Console.WriteLine($"Received request: {incommingRequestString}");
-                ArgumentNullException.ThrowIfNullOrEmpty(incommingRequestString);
 
                 var request = scopedServiceProvider.GetRequiredService<IRequest>();
-                ArgumentNullException.ThrowIfNull(request, "Request is not registered in the service provider.");
-
-                request.BuildRequestComponents(incommingRequestString);//internally builds Request components from the raw request string
+                request.BuildRequestComponents(incommingRequestString);//internally builds Request components from the raw http request string
 
                 if (request.Components.Count == 0)
                     throw new ArgumentNullException(nameof(request.Components), "Request components are not registered in the service provider.");
 
-                // var requestComponentsBuilder = scopedServiceProvider.GetRequiredService<IRequestComponentsBuilder>();
-                // ArgumentNullException.ThrowIfNull(requestComponentsBuilder, "Request components builder is not registered in the service provider.");
-
-                // var requestComponents = requestComponentsBuilder.BuildRequestComponents(incommingRequestString);
-                // if (requestComponents == Enumerable.Empty<IRequestComponent>())
-                //     throw new ArgumentNullException(nameof(requestComponents), "Request components are not registered in the service provider.");
-
                 var configuredEndpoints = scopedServiceProvider.GetRequiredService<IEnumerable<IResponseProducer>>();
-                ArgumentNullException.ThrowIfNull(configuredEndpoints, "Configured endpoints are not registered in the service provider.");
 
                 var existingResource = configuredEndpoints.SingleOrDefault(x => ((ResourceBase)x).HasMatchingRoute());
                 if (existingResource is null)
@@ -68,29 +56,14 @@ void AcceptCallback(IAsyncResult asyncResult)
                     Console.WriteLine("Response has been sent"); return;
                 }
 
-
-                // var requestLine = requestComponents.OfType<Line>().Single();
-
-                // var resourceResolver = scopedServiceProvider.GetRequiredService<IResourceResolver>();
-                // ArgumentNullException.ThrowIfNull(resourceResolver, "Resource resolver is not registered in the service provider.");
-
-                // var existingResource = resourceResolver.ResolveResource(requestLine.Resource, requestLine.HttpMethod);
-                // if (existingResource is null)
-                // {
-                //     Console.WriteLine("Resource not found");
-
-                //     await socket.SendAsync(Encoding.UTF8.GetBytes(HttpResponseWithoutBody.Http404NotFoudResponse));
-
-                //     Console.WriteLine("Response has been sent"); return;
-                // }
-
-                // Console.WriteLine($"Resource: {existingResource.}");
-                // Console.WriteLine($"Sending response: {existingResource.Response}");
-
                 var response = existingResource.ProduceResponse();
-                var responseBuffer = Encoding.UTF8.GetBytes(response.ToString()!);
+                Console.WriteLine($"Sending Response: {response}");
 
-                await socket.SendAsync(responseBuffer); return;
+                await socket.SendAsync(
+                    Encoding.UTF8.GetBytes(response.ToCharArray()),
+                    SocketFlags.None,
+                    cancellationTokenTimeout
+                );
             }
             catch (OperationCanceledException)
             {
@@ -129,9 +102,6 @@ ServiceProvider BuildServiceProvider()
 
     services.AddScoped<IResponseProducer, Echo>();
     services.AddScoped<IResponseProducer, Root>();
-
-    // services.AddScoped<IRequestComponentsBuilder, RequestComponentsBuilder>();
-    // services.AddScoped<IResourceResolver, ResourceResolver>();
     var provider = services.BuildServiceProvider();
     return provider;
 }

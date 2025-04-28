@@ -1,20 +1,16 @@
 using System.Net;
-using System.Text;
 using codecrafters_http_server.src.Interfaces;
+using codecrafters_http_server.src.Models.ResponseComponents;
 using codecrafters_http_server.src.Utils;
 
 namespace codecrafters_http_server.src.Models.Resources;
 
-public class Echo : ResourceBase, IResponseProducer
+public class Echo(IRequest request) : ResourceBase(request,
+    ResourcePath.EchoWithParam.Split('/', StringSplitOptions.RemoveEmptyEntries)[0],
+    new RequestedResource(ResourcePath.EchoWithParam, HttpMethod.Get)
+    ), IResponseProducer
 {
-    public Echo(IRequest request) : base(request,
-        ResourcePath.EchoWithParam.Split('/', StringSplitOptions.RemoveEmptyEntries)[0],
-        new RequestedResource(ResourcePath.EchoWithParam, HttpMethod.Get)
-    )
-    {
-    }
-
-    public HttpResponseMessage ProduceResponse()
+    public string ProduceResponse()
     {
         var requestLine = Request.GetRequestLine();
         var requestedPath = requestLine.Resource;
@@ -23,16 +19,11 @@ public class Echo : ResourceBase, IResponseProducer
 
         var plainTextResponse = requestedPathArgs[1];
 
-        return new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent(plainTextResponse, Encoding.UTF8, "text/plain")
-            {
-                Headers =
-                {
-                    { "Content-Length", plainTextResponse.Length.ToString() }
-                }
-            }
-        };
+        return new Response(
+                    new StatusLine((int)HttpStatusCode.OK, "OK"),
+                    new Header("text/plain", plainTextResponse.Length.ToString()),
+                    plainTextResponse
+                ).ToString();
     }
 
     public override bool HasMatchingRoute()
