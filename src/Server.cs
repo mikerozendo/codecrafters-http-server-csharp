@@ -12,83 +12,75 @@ var serviceProvider = BuildServiceProvider();
 TcpListener server = new(IPAddress.Any, 4221);
 
 server.Start();
-server.BeginAcceptTcpClient(AcceptCallback, server);
+server.BeginAcceptTcpClient(OnConnectedClientCallBack, server);
 
 await Task.Delay(Timeout.Infinite);
 
-void AcceptCallback(IAsyncResult asyncResult)
+void OnConnectedClientCallBack(IAsyncResult asyncResult)
 {
-    try
+    Task.Run(async () =>
     {
-        var server = (TcpListener)asyncResult.AsyncState!;
-        var socket = server.AcceptSocket();
+        var listener = (TcpListener)asyncResult.AsyncState!;
+        using var client = listener.EndAcceptTcpClient(asyncResult);
+        using var socket = client.GetStream().Socket;
 
-        Task.Run(async () =>
+        var serviceScope = serviceProvider.CreateAsyncScope(); // Each task is going to have its own scope, necessary once requests are going to be handled in parallel
+
+        try
         {
-            var serviceScope = serviceProvider.CreateAsyncScope(); // Each task is going to have its own scope, necessary once requests are going to be handled in parallel
+            var scopedServiceProvider = serviceScope.ServiceProvider;
+            var bufferToReceive = new byte[1024];
 
-            try
+            var cancellationTokenTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token;
+            var receivedBytes = await socket.ReceiveAsync(bufferToReceive, SocketFlags.None, cancellationTokenTimeout);
+
+            var incommingRequestString = Encoding.UTF8.GetString(bufferToReceive, 0, receivedBytes);
+            Console.WriteLine($"Received request: {incommingRequestString}");
+
+            var request = scopedServiceProvider.GetRequiredService<IRequest>();
+            request.BuildRequestComponents(incommingRequestString);//internally builds Request components from the raw http request string
+
+            if (request.Components.Count == 0)
+                throw new ArgumentNullException(nameof(request.Components), "Request components are not registered in the service provider.");
+
+            var configuredEndpoints = scopedServiceProvider.GetRequiredService<IEnumerable<IResponseProducer>>();
+
+            var existingResource = configuredEndpoints.SingleOrDefault(x => ((ResourceBase)x).HasMatchingRoute());
+            if (existingResource is null)
             {
-                var scopedServiceProvider = serviceScope.ServiceProvider;
-                var bufferToReceive = new byte[1024];
+                Console.WriteLine("Resource not found");
 
-                var cancellationTokenTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10000)).Token;
-                var receivedBytes = await socket.ReceiveAsync(bufferToReceive, SocketFlags.None, cancellationTokenTimeout);
+                await socket.SendAsync(Encoding.UTF8.GetBytes(HttpResponseWithoutBody.Http404NotFoudResponse));
 
-                var incommingRequestString = Encoding.UTF8.GetString(bufferToReceive, 0, receivedBytes);
-                Console.WriteLine($"Received request: {incommingRequestString}");
-
-                var request = scopedServiceProvider.GetRequiredService<IRequest>();
-                request.BuildRequestComponents(incommingRequestString);//internally builds Request components from the raw http request string
-
-                if (request.Components.Count == 0)
-                    throw new ArgumentNullException(nameof(request.Components), "Request components are not registered in the service provider.");
-
-                var configuredEndpoints = scopedServiceProvider.GetRequiredService<IEnumerable<IResponseProducer>>();
-
-                var existingResource = configuredEndpoints.SingleOrDefault(x => ((ResourceBase)x).HasMatchingRoute());
-                if (existingResource is null)
-                {
-                    Console.WriteLine("Resource not found");
-
-                    await socket.SendAsync(Encoding.UTF8.GetBytes(HttpResponseWithoutBody.Http404NotFoudResponse));
-
-                    Console.WriteLine("Response has been sent"); return;
-                }
-
-                var response = existingResource.ProduceResponse();
-                Console.WriteLine($"Sending Response: {response}");
-
-                await socket.SendAsync(
-                    Encoding.UTF8.GetBytes(response.ToCharArray()),
-                    SocketFlags.None,
-                    cancellationTokenTimeout
-                );
+                Console.WriteLine("Response has been sent"); return;
             }
-            catch (OperationCanceledException)
-            {
-                Console.WriteLine("Timeout");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"General error: {ex}");
-            }
-            finally
-            {
-                Console.WriteLine("Freeing socket resources");
 
-                socket.Dispose();
-                await serviceScope.DisposeAsync();
+            var response = existingResource.ProduceResponse();
+            Console.WriteLine($"Sending Response: {response}");
 
-                // server.EndAcceptSocket(asyncResult);
-                Console.WriteLine("Server is now listening for new connections");
-            }
-        });
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error in AcceptCallback: {ex.Message}");
-    }
+            await socket.SendAsync(
+                Encoding.UTF8.GetBytes(response.ToCharArray()),
+                SocketFlags.None,
+                cancellationTokenTimeout
+            );
+        }
+        catch (OperationCanceledException)
+        {
+            Console.WriteLine("Timeout");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"General error: {ex}");
+        }
+        finally
+        {
+            Console.WriteLine("Freeing socket resources");
+            await serviceScope.DisposeAsync();
+            server.BeginAcceptTcpClient(OnConnectedClientCallBack, server);
+            Console.WriteLine("Server is now listening for new connections");
+        }
+    });
+
 }
 
 
