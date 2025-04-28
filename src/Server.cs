@@ -71,7 +71,7 @@ void AcceptCallback(IAsyncResult asyncResult)
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"General error: {ex.Message}");
+                Console.WriteLine($"General error: {ex}");
             }
             finally
             {

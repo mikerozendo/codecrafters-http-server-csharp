@@ -10,13 +10,6 @@ public sealed class UserAgent(IRequest request) : ResourceBase(request,
     new RequestedResource(ResourcePath.UserAgent, HttpMethod.Get)
     ), IResponseProducer
 {
-    public override bool HasMatchingRoute()
-    {
-        if (!HasMatchingHttpMethod()) return false;
-
-        return Line.Resource.Split('/', StringSplitOptions.RemoveEmptyEntries)[0].Equals(RouteIdentifier);
-    }
-
     public string ProduceResponse()
     {
         return new Response(

@@ -25,16 +25,4 @@ public class Echo(IRequest request) : ResourceBase(request,
                     plainTextResponse
                 ).ToString();
     }
-
-    public override bool HasMatchingRoute()
-    {
-        if (!HasMatchingHttpMethod()) return false;
-
-        var requestedPath = Line.Resource;
-        var requestedPathWithoutArgs = requestedPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
-        var requestedPathWithoutParam = requestedPathWithoutArgs[0];
-
-        return RouteIdentifier.Equals(requestedPathWithoutParam) &&
-               requestedPathWithoutArgs.Length == 2;
-    }
 }
