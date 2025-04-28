@@ -13,6 +13,7 @@ public sealed class Root(IRequest request) : ResourceBase(request,
     {
         if (!HasMatchingHttpMethod()) return false;
 
-        return Request.GetRequestLine().Resource.Equals(ResourcePath.Root);
+        var resource = Line.Resource;
+        return string.IsNullOrWhiteSpace(resource) || resource.Equals(ResourcePath.Root);
     }
 }
