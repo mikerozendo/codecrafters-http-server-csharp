@@ -14,10 +14,10 @@ public sealed class Files(IRequest request) : ResourceBase(request, new Configur
         // var currentDir = Directory.GetCurrentDirectory();
         var tempDir = Path.Combine("tmp");
 
-        Console.WriteLine($"Current Directory: {tempDir}");
+        // Console.WriteLine($"Current Directory: {tempDir}");
 
-        var existingTempDir = Directory.Exists(tempDir);
-        if (!existingTempDir) return await Task.FromResult(HttpResponseWithoutBody.Http404NotFoudResponse);
+        // var existingTempDir = Directory.Exists(tempDir);
+        // if (!existingTempDir) return await Task.FromResult(HttpResponseWithoutBody.Http404NotFoudResponse);
 
         Console.WriteLine($"Searching for files in: {tempDir}");
         var files = Directory.GetFiles(tempDir, "*.*", SearchOption.AllDirectories);
