@@ -8,32 +8,10 @@ using codecrafters_http_server.src.Models.RequestComponents;
 using codecrafters_http_server.src.Resources;
 using codecrafters_http_server.src;
 
-Configuration configuration = new Configuration();
-for (int i = 0; i < args.Length; i++)
+Configuration configuration = new()
 {
-    Console.WriteLine(args[i]);
-}
-
-configuration.FilesDirectory = args.Length > 0 ? args[1] : string.Empty;
-
-// for (int i = 0; i < args.Length; i++)
-// {
-//     var hasCreateDirArg = args[i].StartsWith("--directory");
-//     if (hasCreateDirArg)
-//     {
-//         var path = args[i + 1];
-//         Console.WriteLine($"Directory argument: {path}");
-//         configuration.FilesDirectory = path;
-//         // if (!Directory.Exists(path))
-//         // {
-//         //     Directory.CreateDirectory(path);
-//         //     configuration.FilesDirectory = path;
-//         //     Console.WriteLine($"Directory '{path}' has been created.");
-//         // }
-
-//         break;//needs to change if a new command args is added
-//     }
-// }
+    FilesDirectory = args.Length > 0 ? args[1] : string.Empty
+};
 
 var serviceProvider = BuildServiceProvider(configuration);
 
@@ -132,3 +110,21 @@ ServiceProvider BuildServiceProvider(Configuration configuration = null)
 
     return provider;
 }
+
+// for (int i = 0; i < args.Length; i++) // only used for tests at https://app.codecrafters.io/courses/http-server/stages/ap6
+// {
+//     var hasCreateDirArg = args[i].StartsWith("--directory");
+//     if (hasCreateDirArg)
+//     {
+//         var path = args[i + 1];
+//         Console.WriteLine($"Directory argument: {path}");
+//         // configuration.FilesDirectory = path;
+//         if (!Directory.Exists(path))
+//         {
+//             Directory.CreateDirectory(path);
+//             Console.WriteLine($"Directory '{path}' has been created.");
+//         }
+
+//         break;//needs to change if a new command args is added
+//     }
+// }
