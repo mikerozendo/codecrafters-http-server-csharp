@@ -1,4 +1,6 @@
 using System.Net;
+using System.Text;
+using System.Text.Unicode;
 using codecrafters_http_server.src.Interfaces;
 using codecrafters_http_server.src.Models;
 using codecrafters_http_server.src.Models.ResponseComponents;
@@ -20,8 +22,9 @@ public sealed class Files(IRequest request, Configuration configuration) : Resou
         if (!File.Exists(filePath)) return await Task.FromResult(HttpResponseWithoutBody.Http404NotFoudResponse);
 
         Console.WriteLine($"Starting to read file: {filePath}");
-        var filePlainTextContent = await File.ReadAllTextAsync(filePath);
-        var bytes = await File.ReadAllBytesAsync(filePlainTextContent);
+        // var filePlainTextContent = await File.ReadAllTextAsync(filePath);
+        var bytes = await File.ReadAllBytesAsync(filePath);
+        var filePlainTextContent = Encoding.UTF8.GetString(bytes, 0, bytes.Length);
 
         Console.WriteLine($"file content: {filePlainTextContent}");
         Console.WriteLine($"Producing response for file: {filePlainTextContent}");
