@@ -11,8 +11,8 @@ public sealed class Files(IRequest request) : ResourceBase(request, new Configur
     public async Task<string> ProduceResponseAsync()
     {
         //"./codecrafters-http-server-csharp/tmp"
-        var currentDir = Directory.GetCurrentDirectory();
-        var tempDir = Path.Combine(currentDir, "tmp");
+        // var currentDir = Directory.GetCurrentDirectory();
+        var tempDir = Path.Combine("tmp");
 
         Console.WriteLine($"Current Directory: {tempDir}");
 
