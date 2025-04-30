@@ -7,6 +7,23 @@ using codecrafters_http_server.src.Utils;
 using codecrafters_http_server.src.Models.RequestComponents;
 using codecrafters_http_server.src.Resources;
 
+if (args.Length > 0)
+{
+    var baseDirectory = args.FirstOrDefault(arg => arg.StartsWith("--directory="))?.Split('=')[1];
+
+    if (string.IsNullOrEmpty(baseDirectory))
+    {
+        Console.WriteLine("Invalid or missing --directory argument.");
+        return;
+    }
+
+    if (!Directory.Exists(baseDirectory))
+    {
+        Directory.CreateDirectory(baseDirectory);
+        Console.WriteLine($"Directory '{baseDirectory}' has been created.");
+    }
+}
+
 var serviceProvider = BuildServiceProvider();
 
 TcpListener server = new(IPAddress.Any, 4221);
