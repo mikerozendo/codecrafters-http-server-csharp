@@ -14,23 +14,26 @@ for (int i = 0; i < args.Length; i++)
     Console.WriteLine(args[i]);
 }
 
-for (int i = 0; i < args.Length; i++)
-{
-    var hasCreateDirArg = args[i].StartsWith("--directory");
-    if (hasCreateDirArg)
-    {
-        var path = args[i + 1];
-        Console.WriteLine($"Directory argument: {path}");
-        if (!Directory.Exists(path))
-        {
-            Directory.CreateDirectory(path);
-            configuration.FilesDirectory = path;
-            Console.WriteLine($"Directory '{path}' has been created.");
-        }
+configuration.FilesDirectory = args.Length > 0 ? args[1] : string.Empty;
 
-        break;//needs to change if a new command args is added
-    }
-}
+// for (int i = 0; i < args.Length; i++)
+// {
+//     var hasCreateDirArg = args[i].StartsWith("--directory");
+//     if (hasCreateDirArg)
+//     {
+//         var path = args[i + 1];
+//         Console.WriteLine($"Directory argument: {path}");
+//         configuration.FilesDirectory = path;
+//         // if (!Directory.Exists(path))
+//         // {
+//         //     Directory.CreateDirectory(path);
+//         //     configuration.FilesDirectory = path;
+//         //     Console.WriteLine($"Directory '{path}' has been created.");
+//         // }
+
+//         break;//needs to change if a new command args is added
+//     }
+// }
 
 var serviceProvider = BuildServiceProvider(configuration);
 
