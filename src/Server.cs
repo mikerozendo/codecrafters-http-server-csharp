@@ -8,7 +8,7 @@ using codecrafters_http_server.src.Models.RequestComponents;
 using codecrafters_http_server.src.Resources;
 using codecrafters_http_server.src;
 
-
+Configuration configuration = new Configuration();
 for (int i = 0; i < args.Length; i++)
 {
     var hasCreateDirArg = args[i].StartsWith("--directory");
@@ -19,7 +19,7 @@ for (int i = 0; i < args.Length; i++)
         if (!Directory.Exists(path))
         {
             Directory.CreateDirectory(path);
-            Configuration.FilesDirectory = path;
+            configuration.FilesDirectory = path;
             Console.WriteLine($"Directory '{path}' has been created.");
         }
 
@@ -27,7 +27,7 @@ for (int i = 0; i < args.Length; i++)
     }
 }
 
-var serviceProvider = BuildServiceProvider();
+var serviceProvider = BuildServiceProvider(configuration);
 
 TcpListener server = new(IPAddress.Any, 4221);
 
@@ -104,7 +104,7 @@ void OnConnectedClientCallBack(IAsyncResult asyncResult)
     });
 }
 
-ServiceProvider BuildServiceProvider()
+ServiceProvider BuildServiceProvider(Configuration configuration = null)
 {
     var services = new ServiceCollection();
 
@@ -117,6 +117,10 @@ ServiceProvider BuildServiceProvider()
     services.AddScoped<IResponseProducer, UserAgent>();
     services.AddScoped<IResponseProducer, Files>();
 
+    if (configuration is not null)
+        services.AddSingleton(configuration);
+
     var provider = services.BuildServiceProvider();
+
     return provider;
 }

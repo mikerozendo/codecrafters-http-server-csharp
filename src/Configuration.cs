@@ -1,6 +1,6 @@
 namespace codecrafters_http_server.src;
 
-public static class Configuration
+public sealed class Configuration
 {
-    public static string? FilesDirectory { get; set; }
+    public string? FilesDirectory { get; set; }
 }
