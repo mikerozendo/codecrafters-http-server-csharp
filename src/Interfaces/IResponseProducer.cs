@@ -2,5 +2,5 @@ namespace codecrafters_http_server.src.Interfaces;
 
 public interface IResponseProducer
 {
-    string ProduceResponse();
+    Task<string> ProduceResponseAsync();
 }

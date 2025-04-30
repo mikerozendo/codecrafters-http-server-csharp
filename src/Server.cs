@@ -56,7 +56,7 @@ void OnConnectedClientCallBack(IAsyncResult asyncResult)
                 Console.WriteLine("Response has been sent"); return;
             }
 
-            var response = existingResource.ProduceResponse();
+            var response = await existingResource.ProduceResponseAsync();
             Console.WriteLine($"Sending Response: {response}");
 
             await socket.SendAsync(
@@ -96,6 +96,7 @@ ServiceProvider BuildServiceProvider()
     services.AddScoped<IResponseProducer, Echo>();
     services.AddScoped<IResponseProducer, Root>();
     services.AddScoped<IResponseProducer, UserAgent>();
+    services.AddScoped<IResponseProducer, Files>();
 
     var provider = services.BuildServiceProvider();
     return provider;

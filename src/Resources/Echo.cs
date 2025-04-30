@@ -8,7 +8,7 @@ namespace codecrafters_http_server.src.Resources;
 
 public sealed class Echo(IRequest request) : ResourceBase(request, new ConfiguredResource(ResourcePath.EchoWithParam, HttpMethod.Get)), IResponseProducer
 {
-    public string ProduceResponse()
+    public async Task<string> ProduceResponseAsync()
     {
         var requestLine = Request.GetRequestLine();
         var requestedPath = requestLine.Resource;
@@ -17,10 +17,10 @@ public sealed class Echo(IRequest request) : ResourceBase(request, new Configure
 
         var plainTextResponse = requestedPathArgs[1];
 
-        return new Response(
+        return await Task.FromResult(new Response(
                     new StatusLine((int)HttpStatusCode.OK, nameof(HttpStatusCode.OK)),
                     new Header("text/plain", plainTextResponse.Length.ToString()),
                     plainTextResponse
-                ).ToString();
+                ).ToString());
     }
 }

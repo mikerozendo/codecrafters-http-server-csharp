@@ -7,5 +7,5 @@ namespace codecrafters_http_server.src.Resources;
 public sealed class Root(IRequest request)
     : ResourceBase(request, new ConfiguredResource(ResourcePath.Root, HttpMethod.Get)), IResponseProducer
 {
-    public string ProduceResponse() => HttpResponseWithoutBody.Http200OkResponse;
+    public async Task<string> ProduceResponseAsync() => await Task.FromResult(HttpResponseWithoutBody.Http200OkResponse);
 }

@@ -8,12 +8,12 @@ namespace codecrafters_http_server.src.Resources;
 
 public sealed class UserAgent(IRequest request) : ResourceBase(request, new ConfiguredResource(ResourcePath.UserAgent, HttpMethod.Get)), IResponseProducer
 {
-    public string ProduceResponse()
+    public async Task<string> ProduceResponseAsync()
     {
-        return new Response(
+        return await Task.FromResult(new Response(
             new StatusLine((int)HttpStatusCode.OK, "OK"),
             new Header("text/plain", Header.UserAgent.Length.ToString()),
             Header.UserAgent
-        ).ToString();
+        ).ToString());
     }
 }
