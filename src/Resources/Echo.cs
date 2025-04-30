@@ -1,14 +1,12 @@
 using System.Net;
 using codecrafters_http_server.src.Interfaces;
+using codecrafters_http_server.src.Models;
 using codecrafters_http_server.src.Models.ResponseComponents;
 using codecrafters_http_server.src.Utils;
 
-namespace codecrafters_http_server.src.Models.Resources;
+namespace codecrafters_http_server.src.Resources;
 
-public class Echo(IRequest request) : ResourceBase(request,
-    ResourcePath.EchoWithParam.Split('/', StringSplitOptions.RemoveEmptyEntries)[0],
-    new RequestedResource(ResourcePath.EchoWithParam, HttpMethod.Get)
-    ), IResponseProducer
+public sealed class Echo(IRequest request) : ResourceBase(request, new ConfiguredResource(ResourcePath.EchoWithParam, HttpMethod.Get)), IResponseProducer
 {
     public string ProduceResponse()
     {
@@ -20,7 +18,7 @@ public class Echo(IRequest request) : ResourceBase(request,
         var plainTextResponse = requestedPathArgs[1];
 
         return new Response(
-                    new StatusLine((int)HttpStatusCode.OK, "OK"),
+                    new StatusLine((int)HttpStatusCode.OK, nameof(HttpStatusCode.OK)),
                     new Header("text/plain", plainTextResponse.Length.ToString()),
                     plainTextResponse
                 ).ToString();

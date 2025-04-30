@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using codecrafters_http_server.src.Interfaces;
 using codecrafters_http_server.src.Utils;
 using codecrafters_http_server.src.Models.RequestComponents;
-using codecrafters_http_server.src.Models.Resources;
+using codecrafters_http_server.src.Resources;
 
 var serviceProvider = BuildServiceProvider();
 
