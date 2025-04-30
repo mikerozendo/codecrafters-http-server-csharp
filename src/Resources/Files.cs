@@ -20,18 +20,18 @@ public sealed class Files(IRequest request) : ResourceBase(request, new Configur
         if (!existingTempDir) return await Task.FromResult(HttpResponseWithoutBody.Http404NotFoudResponse);
 
         Console.WriteLine($"Searching for files in: {tempDir}");
-        var files = Directory.GetFiles(tempDir, "*.*", SearchOption.TopDirectoryOnly);
+        var files = Directory.GetFiles(tempDir, "*.*", SearchOption.AllDirectories);
         if (files.Length == 0) return await Task.FromResult(HttpResponseWithoutBody.Http404NotFoudResponse);
 
 
         Console.WriteLine($"Searching for specific file in: {tempDir}");
-        var existingFile = files.FirstOrDefault(x => x.Equals(IncommingRequestPathArgs[1], StringComparison.OrdinalIgnoreCase));
+        var existingFile = files.FirstOrDefault(x => x.Contains(IncommingRequestPathArgs[1], StringComparison.OrdinalIgnoreCase));
         if (existingFile is null) return await Task.FromResult(HttpResponseWithoutBody.Http404NotFoudResponse);
 
-        var filePath = Path.Combine(tempDir, existingFile);
-        Console.WriteLine($"FilePath: {filePath}");
+        // var filePath = Path.Combine(tempDir, existingFile);
+        Console.WriteLine($"FilePath: {existingFile}");
 
-        var filePlainTextContent = await File.ReadAllTextAsync(filePath);
+        var filePlainTextContent = await File.ReadAllTextAsync(existingFile);
         var bytes = await File.ReadAllBytesAsync(filePlainTextContent);
 
         Console.WriteLine($"file content: {filePlainTextContent}");
