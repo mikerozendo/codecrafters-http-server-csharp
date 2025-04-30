@@ -11,6 +11,11 @@ using codecrafters_http_server.src;
 Configuration configuration = new Configuration();
 for (int i = 0; i < args.Length; i++)
 {
+    Console.WriteLine(args[i]);
+}
+
+for (int i = 0; i < args.Length; i++)
+{
     var hasCreateDirArg = args[i].StartsWith("--directory");
     if (hasCreateDirArg)
     {
