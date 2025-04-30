@@ -6,23 +6,26 @@ using codecrafters_http_server.src.Interfaces;
 using codecrafters_http_server.src.Utils;
 using codecrafters_http_server.src.Models.RequestComponents;
 using codecrafters_http_server.src.Resources;
+using codecrafters_http_server.src;
 
-// if (args.Length > 0)
-// {
-//     var baseDirectory = args.FirstOrDefault(arg => arg.StartsWith("--directory="))?.Split('=')[1];
 
-//     if (string.IsNullOrEmpty(baseDirectory))
-//     {
-//         Console.WriteLine("Invalid or missing --directory argument.");
-//         return;
-//     }
+for (int i = 0; i < args.Length; i++)
+{
+    var hasCreateDirArg = args[i].StartsWith("--directory");
+    if (hasCreateDirArg)
+    {
+        var path = args[i + 1];
+        Console.WriteLine($"Directory argument: {path}");
+        if (!Directory.Exists(path))
+        {
+            Directory.CreateDirectory(path);
+            Configuration.FilesDirectory = path;
+            Console.WriteLine($"Directory '{path}' has been created.");
+        }
 
-//     if (!Directory.Exists(baseDirectory))
-//     {
-//         Directory.CreateDirectory(baseDirectory);
-//         Console.WriteLine($"Directory '{baseDirectory}' has been created.");
-//     }
-// }
+        break;//needs to change if a new command args is added
+    }
+}
 
 var serviceProvider = BuildServiceProvider();
 
@@ -30,14 +33,15 @@ TcpListener server = new(IPAddress.Any, 4221);
 
 server.Start();
 
-while (true)
+while (true)//trash, too many resources
     server.BeginAcceptTcpClient(OnConnectedClientCallBack, server);
-
 
 void OnConnectedClientCallBack(IAsyncResult asyncResult)
 {
     Task.Run(async () =>
     {
+        Console.WriteLine($"Received connection request at: {DateTime.UtcNow}");
+
         var listener = (TcpListener)asyncResult.AsyncState!;
         using var client = listener.EndAcceptTcpClient(asyncResult);
         using var socket = client.GetStream().Socket;
@@ -98,9 +102,7 @@ void OnConnectedClientCallBack(IAsyncResult asyncResult)
             Console.WriteLine("Server is now listening for new connections");
         }
     });
-
 }
-
 
 ServiceProvider BuildServiceProvider()
 {

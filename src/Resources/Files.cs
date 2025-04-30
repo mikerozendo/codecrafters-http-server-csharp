@@ -12,19 +12,17 @@ public sealed class Files(IRequest request) : ResourceBase(request, new Configur
     {
         //"./codecrafters-http-server-csharp/tmp"
         // var currentDir = Directory.GetCurrentDirectory();
-        var tempDir = Path.Combine("tmp");
+        if (string.IsNullOrEmpty(Configuration.FilesDirectory))
+            return await Task.FromResult(HttpResponseWithoutBody.Http404NotFoudResponse);
 
-        // Console.WriteLine($"Current Directory: {tempDir}");
+        var filesDirectory = Path.Combine(Configuration.FilesDirectory);
 
-        // var existingTempDir = Directory.Exists(tempDir);
-        // if (!existingTempDir) return await Task.FromResult(HttpResponseWithoutBody.Http404NotFoudResponse);
-
-        Console.WriteLine($"Searching for files in: {tempDir}");
-        var files = Directory.GetFiles(tempDir, "*.*", SearchOption.AllDirectories);
+        Console.WriteLine($"Searching for files in: {filesDirectory}");
+        var files = Directory.GetFiles(filesDirectory, "*.*", SearchOption.AllDirectories);
         if (files.Length == 0) return await Task.FromResult(HttpResponseWithoutBody.Http404NotFoudResponse);
 
 
-        Console.WriteLine($"Searching for specific file in: {tempDir}");
+        Console.WriteLine($"Searching for specific file in: {filesDirectory}");
         var existingFile = files.FirstOrDefault(x => x.Contains(IncommingRequestPathArgs[1], StringComparison.OrdinalIgnoreCase));
         if (existingFile is null) return await Task.FromResult(HttpResponseWithoutBody.Http404NotFoudResponse);
 
