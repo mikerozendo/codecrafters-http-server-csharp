@@ -10,26 +10,16 @@ public sealed class Files(IRequest request) : ResourceBase(request, new Configur
 {
     public async Task<string> ProduceResponseAsync()
     {
-        //"./codecrafters-http-server-csharp/tmp"
-        // var currentDir = Directory.GetCurrentDirectory();
         if (string.IsNullOrEmpty(Configuration.FilesDirectory))
             return await Task.FromResult(HttpResponseWithoutBody.Http404NotFoudResponse);
 
-        var filesDirectory = Path.Combine(Configuration.FilesDirectory);
+        var filePath = Path.Combine(Configuration.FilesDirectory, IncommingRequestPathArgs[1]);
+        Console.WriteLine($"Requested file: {filePath}");
 
-        Console.WriteLine($"Searching for files in: {filesDirectory}");
-        var files = Directory.GetFiles(filesDirectory, "*.*", SearchOption.AllDirectories);
-        if (files.Length == 0) return await Task.FromResult(HttpResponseWithoutBody.Http404NotFoudResponse);
+        if (!File.Exists(filePath)) return await Task.FromResult(HttpResponseWithoutBody.Http404NotFoudResponse);
 
-
-        Console.WriteLine($"Searching for specific file in: {filesDirectory}");
-        var existingFile = files.FirstOrDefault(x => x.Contains(IncommingRequestPathArgs[1], StringComparison.OrdinalIgnoreCase));
-        if (existingFile is null) return await Task.FromResult(HttpResponseWithoutBody.Http404NotFoudResponse);
-
-        // var filePath = Path.Combine(tempDir, existingFile);
-        Console.WriteLine($"FilePath: {existingFile}");
-
-        var filePlainTextContent = await File.ReadAllTextAsync(existingFile);
+        Console.WriteLine($"Starting to read file: {filePath}");
+        var filePlainTextContent = await File.ReadAllTextAsync(filePath);
         var bytes = await File.ReadAllBytesAsync(filePlainTextContent);
 
         Console.WriteLine($"file content: {filePlainTextContent}");
